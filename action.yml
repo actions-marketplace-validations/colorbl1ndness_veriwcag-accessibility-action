@@ -1,0 +1,28 @@
+name: "VeriWCAG Accessibility CI Check"
+description: "Run Playwright + @axe-core/playwright WCAG 2.2 AA checks on a staging URL and output a Job Summary table."
+inputs:
+  url:
+    description: "Public or staging URL to scan"
+    required: true
+  fail_on_critical:
+    description: "Fail the workflow if critical violations are found (true/false)"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Install scanner dependencies
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}"
+        npm ci --omit=dev
+        npx playwright install chromium
+    - name: Run WCAG 2.2 AA scan
+      shell: bash
+      env:
+        TARGET_URL: ${{ inputs.url }}
+        FAIL_ON_CRITICAL: ${{ inputs.fail_on_critical }}
+      run: node "${{ github.action_path }}/index.mjs"
